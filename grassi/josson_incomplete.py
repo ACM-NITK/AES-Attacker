@@ -244,7 +244,7 @@ for ii in range(256):
                                 plain_text[2][2]=j
                                 plain_text[3][3]=i
                                 p2 = encrypt(key,plain_text)
-                                if(p2[0][0]==p1[0][0] and p2[1][3]==p1[1][3] and p2[2][2]==p1[2][2] and p2[3][1]==p1[3][1]):
+                                if(p2[0][0]==p1[0][0] and p2[1][3]==p1[1][3] and p2[2][2]==p1[2][2] and p2[3][1]==p1[3][1] and p1!=p2):
                                     print("found")
                                     print(p2)
                                     print(plain_text)
