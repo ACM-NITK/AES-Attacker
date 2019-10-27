@@ -1,7 +1,3 @@
-import random
-import sys
-sys.path.append('./')
-
 # S-box
 sbox = [0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67,
         0x2b, 0xfe, 0xd7, 0xab, 0x76, 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59,
@@ -109,7 +105,7 @@ def state_to_text(matrix):
     for i in range(4):
         for j in range(4):
             text |= (matrix[j][i] << (120 - 8 * (4 * i + j)))
-    print(text)
+    #print(text)
     return text
 
 def encrypt(key,matrix):
@@ -126,7 +122,7 @@ def encrypt(key,matrix):
             cipher[0][i].append(key0[i][j] ^ matrix[i][j])
     
     #rounds 1-9
-    for i in range(1,10):
+    for i in range(1,5):
       
         #substitution
         
@@ -179,7 +175,7 @@ def encrypt(key,matrix):
     sbox_state = [[] for _ in range(4)]
     for j in range(4):
         for k in range(4):
-            sbox_state[j].append(sbox[cipher[9][j][k]])
+            sbox_state[j].append(sbox[cipher[4][j][k]])
     #print(sbox_state)
 
     #shift rows
@@ -193,8 +189,8 @@ def encrypt(key,matrix):
     roundkey = key_to_state(10*4,keys)  
     for j in range(4):
         for k in range(4):
-            cipher[10][j].append(roundkey[j][k] ^ shiftrow_state[j][k])
-    #print(cipher[10])
+            cipher[5][j].append(roundkey[j][k] ^ shiftrow_state[j][k])
+    #print(cipher[5])
     
     #print("Ciphertext:")
     #print("binary: ", end =" "),
@@ -207,7 +203,167 @@ def encrypt(key,matrix):
           #else:
               #print(hex(cipher[10][j][i])[2:4], end =" "),
     #print(cipher[10])
-    return cipher[10]
+    return cipher[5]
+
+def encryptfrom1(key,matrix):
+    keys = get_roundkeys(key)
+    
+    #adding round 0 key
+    cipher = [[[] for __ in range(4) ] for _ in range(11)]
+    key0 = key_to_state(0,keys)
+    #matrix = text_to_state(text)
+    #print(matrix)
+    cipher[0] = matrix
+    cipher[1] = matrix
+    
+    #rounds 1-9
+    for i in range(2,5):
+      
+        #substitution
+        
+        sbox_state = [[] for _ in range(4)]
+        for j in range(4):
+            for k in range(4):
+                sbox_state[j].append(sbox[cipher[i-1][j][k]])
+        #print(sbox_state)
+        
+        #shift rows
+        shiftrow_state = [[] for _ in range(4)]
+        for j in range(4):
+            for k in range(4):
+                shiftrow_state[j].append(sbox_state[j][(k+j)%4])
+        #print(shiftrow_state)
+        
+        #mix columns
+        mixcol_state = [[] for _ in range(4)]
+        for j in range(4):
+            for k in range(4):
+                sum=0
+                for l in range(4):
+                    if fixed_matrix[j][l] == 0x01:
+                        sum = sum ^ shiftrow_state[l][k]
+                    elif fixed_matrix[j][l] == 0x02:
+                        if shiftrow_state[l][k]>127:
+                            sum = sum ^ (((shiftrow_state[l][k]<<1)-256)^0x1b)
+                        else:
+                            sum = sum ^ ((shiftrow_state[l][k]<<1))
+                    elif fixed_matrix[j][l] == 0x03:
+                        if shiftrow_state[l][k]>127:
+                            sum = sum ^ ((((shiftrow_state[l][k]<<1)-256)^0x1b)  ^ shiftrow_state[l][k])
+                        else:
+                            sum = sum ^ (((shiftrow_state[l][k]<<1)) ^ shiftrow_state[l][k])
+                    #print(sum)
+                mixcol_state[j].append(sum)
+        #print(mixcol_state)
+                
+        #add roundkey
+        roundkey = key_to_state(i*4,keys)  
+        for j in range(4):
+            for k in range(4):
+                cipher[i][j].append(roundkey[j][k] ^ mixcol_state[j][k])
+        #print(cipher[4])
+        
+    #round 10 
+    
+    #substitution
+        
+    sbox_state = [[] for _ in range(4)]
+    for j in range(4):
+        for k in range(4):
+            sbox_state[j].append(sbox[cipher[4][j][k]])
+    #print(sbox_state)
+
+    #shift rows
+    shiftrow_state = [[] for _ in range(4)]
+    for j in range(4):
+        for k in range(4):
+            shiftrow_state[j].append(sbox_state[j][(k+j)%4])
+    #print(shiftrow_state)
+    
+    #add roundkey
+    roundkey = key_to_state(10*4,keys)  
+    for j in range(4):
+        for k in range(4):
+            cipher[5][j].append(roundkey[j][k] ^ shiftrow_state[j][k])
+    #print(cipher[5])
+    
+    #print("Ciphertext:")
+    #print("binary: ", end =" "),
+    #state_to_text(cipher[10])
+    #print("hex : ", end =" "),
+    #for i in range(4):
+        #for j in range(4):
+          #if(cipher[10][j][i]<16):
+              #print(hex(cipher[10][j][i])[2:3], end =" "),
+          #else:
+              #print(hex(cipher[10][j][i])[2:4], end =" "),
+    #print(cipher[10])
+    return cipher[5]
+
+
+def encrypttoround1(key,matrix):
+    keys = get_roundkeys(key)
+    
+    #adding round 0 key
+    cipher = [[[] for __ in range(4) ] for _ in range(11)]
+    key0 = key_to_state(0,keys)
+    #matrix = text_to_state(text)
+    #print(matrix)
+    
+    for i in range(4):
+        for j in range(4):
+            cipher[0][i].append(key0[i][j] ^ matrix[i][j])
+    
+    #rounds 1-9
+    for i in range(1,2):
+      
+        #substitution
+        
+        sbox_state = [[] for _ in range(4)]
+        for j in range(4):
+            for k in range(4):
+                sbox_state[j].append(sbox[cipher[i-1][j][k]])
+        #print(sbox_state)
+        
+        #shift rows
+        shiftrow_state = [[] for _ in range(4)]
+        for j in range(4):
+            for k in range(4):
+                shiftrow_state[j].append(sbox_state[j][(k+j)%4])
+        #print(shiftrow_state)
+        
+        #mix columns
+        mixcol_state = [[] for _ in range(4)]
+        for j in range(4):
+            for k in range(4):
+                sum=0
+                for l in range(4):
+                    if fixed_matrix[j][l] == 0x01:
+                        sum = sum ^ shiftrow_state[l][k]
+                    elif fixed_matrix[j][l] == 0x02:
+                        if shiftrow_state[l][k]>127:
+                            sum = sum ^ (((shiftrow_state[l][k]<<1)-256)^0x1b)
+                        else:
+                            sum = sum ^ ((shiftrow_state[l][k]<<1))
+                    elif fixed_matrix[j][l] == 0x03:
+                        if shiftrow_state[l][k]>127:
+                            sum = sum ^ ((((shiftrow_state[l][k]<<1)-256)^0x1b)  ^ shiftrow_state[l][k])
+                        else:
+                            sum = sum ^ (((shiftrow_state[l][k]<<1)) ^ shiftrow_state[l][k])
+                    #print(sum)
+                mixcol_state[j].append(sum)
+        #print(mixcol_state)
+                
+        #add roundkey
+        roundkey = key_to_state(i*4,keys)  
+        for j in range(4):
+            for k in range(4):
+                cipher[i][j].append(roundkey[j][k] ^ mixcol_state[j][k])
+        #print(cipher[i])
+        
+    #print(cipher[10])
+    return cipher[1]
+
 
 key = 0x2b7e151628aed2a6abf7158809cf4f3c
 print("key :", end =" "),
@@ -234,24 +390,53 @@ for ii in range(256):
                 plain_text2[2][2]=jj
                 plain_text2[3][3]=ii
                 p1 = encrypt(key,plain_text2)
-                print("change in plaintext2")
+                #print("change in plaintext2")
                 for i in range(256):
                     for j in range(256):
                         for k in range(256):
+                            print(i,j,k)
                             for l in range(256):
                                 plain_text[0][0]=l
                                 plain_text[1][1]=k
                                 plain_text[2][2]=j
                                 plain_text[3][3]=i
                                 p2 = encrypt(key,plain_text)
-                                if(p2[0][0]==p1[0][0] and p2[1][3]==p1[1][3] and p2[2][2]==p1[2][2] and p2[3][1]==p1[3][1] and p1!=p2):
+                                if(p2[0][0]==p1[0][0] and p2[1][3]==p1[1][3] and p2[2][2]==p1[2][2] and p2[3][1]==p1[3][1] and p2!=p1):
                                     print("found")
-                                    print(p2)
-                                    print(plain_text)
-                                    print(i,j,k,l)
+                                    gp1=p1
+                                    gp2=p2
+                                    i=255
+                                    ii=255
+                                    j=255
+                                    jj=255
+                                    k=255
+                                    kk=255
+                                    l=255
+                                    ll=255
                                 #print(shiftrow_state)
 
-
-        
-
+#good pairs are found
+print(gp1,gp2)
+key_try = [[0,0,0,0] for _ in range(4)]        
+for i in range(256):
+    for j in range(256):
+        for k in range(256):
+            for l in range(256): 
+                key_try[1][1]=k
+                key_try[2][2]=j
+                key_try[3][3]=i
+                key_try[0][0]=l
+                xp=encrypttoround1(key_try,gp1)	
+                yp=encrypttoround1(key_try,gp2)
+                zp=xp
+                wp=yp
+                zp[1][0]=yp[1][0]
+                zp[3][0]=yp[3][0]
+                wp[1][0]=xp[1][0]
+                wp[3][0]=xp[1][0]
+                p3=encryptfrom1(key_try,zp)
+                p4=encryptfrom1(key_try,wp)
+                if(p3[0][0]==p4[0][0] and p3[1][3]==p4[1][3] and p3[2][2]==p4[2][2] and p3[3][1]==p4[3][1]):
+                  print(key_try)
+                  print("SUCESS")
         
