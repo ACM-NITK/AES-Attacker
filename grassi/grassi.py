@@ -31,10 +31,10 @@ for ii in range(256):
                                 p2 = encrypt(key, plain_text)
                                 p1 = encrypt(key, plain_text2)
 
-                                if(p2[0][0] == p1[0][0] and p2[1][3] == p1[1][3] and p2[2][2] == p1[2][2] and p2[3][1] == p1[3][1] and p2 != p1):
+                                if(p2[0][0] == p1[0][0] and p2[1][3] == p1[1][3] and p2[2][2] == p1[2][2] and p2[3][1] == p1[3][1] and plain_text != plain_text2):
                                         print("found")
-                                        gp1 = p1
-                                        gp2 = p2
+                                        gp1 = plain_text
+                                        gp2 = plain_text2
                                         i = 255
                                         ii = 255
                                         j = 255
@@ -43,7 +43,7 @@ for ii in range(256):
                                         kk = 255
                                         l = 255
                                         ll = 255
-                                        print(p1, p2)
+                                        # print(p1, p2)
 
 # good pairs are found
 # print(gp1,gp2)
