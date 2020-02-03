@@ -1,3 +1,4 @@
+import random	
 import sys
 sys.path.append('./')
 
@@ -7,6 +8,21 @@ key = 0x2b7e151628aed2a6abf7158809cf4f3c
 print("key :"),
 print(key)
 print("\n")
+
+a=[]
+b=[]
+c=[]
+d=[]
+
+for i in range(256):
+	a.append(i)
+	b.append(i)
+	c.append(i)
+	d.append(i)
+
+random.shuffle(b)
+random.shuffle(c)
+random.shuffle(d)
 
 plain_text = [[0, 0, 0, 0] for _ in range(4)]
 plain_text2 = [[0, 0, 0, 0] for _ in range(4)]
@@ -18,16 +34,19 @@ for ii in range(256):
                     for j in range(i+1,256):
                         for k in range(256):
                             for l in range(k+1,256):
-                                print(j,k,l)
+                                print("plaintext1")
+                                print(a[ii],b[kk],c[i],d[k])
+                                print("plaintext2")
+                                print(a[jj],b[ll],c[j],d[l])
                                 # ToDo : Make this assignment random 
-                                plain_text2[0][0] = ll
-                                plain_text2[1][1] = kk
-                                plain_text2[2][2] = jj
-                                plain_text2[3][3] = ii
-                                plain_text[0][0] = l
-                                plain_text[1][1] = k
-                                plain_text[2][2] = j
-                                plain_text[3][3] = i
+                                plain_text2[0][0] = a[ii]
+                                plain_text2[1][1] = b[kk]
+                                plain_text2[2][2] = c[i]
+                                plain_text2[3][3] = d[k]
+                                plain_text[0][0] = a[jj]
+                                plain_text[1][1] = b[ll]
+                                plain_text[2][2] = c[j]
+                                plain_text[3][3] = d[l]
                                 p2 = encrypt(key, plain_text)
                                 p1 = encrypt(key, plain_text2)
 
